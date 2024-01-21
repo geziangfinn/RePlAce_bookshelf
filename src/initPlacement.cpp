@@ -81,7 +81,7 @@ void initial_placement() {
         return;
     }
     
-    printf("INFO:  The Matrix Size is %d\n", moduleCNT);
+    printf("INFO:  The Matrix Size is %d\n", moduleCNT);// modulce CNT: only movable modules
     fflush(stdout);
 
     // malloc to solve PCG
@@ -100,7 +100,11 @@ void initial_placement() {
 
     VectorXf xcg_x(moduleCNT), xcg_b(moduleCNT), 
              ycg_x(moduleCNT), ycg_b(moduleCNT);
-
+    SavePlotAsJPEG( string("FIP - Iter: ") + to_string(100), false, 
+                           string(dir_bnd) 
+                           + string("/initPlacement_") 
+                           + intoFourDigit(100) );
+            // SavePlot( string("FIP - Iter: ") + to_string(i) );
     for(int i = 0;; i++) {
 
         time_start (&time_s);
@@ -122,10 +126,10 @@ void initial_placement() {
         update_net_by_pin ();
         HPWL_count ();
 
-        if( isPlot && i % 5 == 0 ) {
+        if(1) {
             SavePlotAsJPEG( string("FIP - Iter: ") + to_string(i), false, 
                            string(dir_bnd) 
-                           + string("/initPlace/initPlacement_") 
+                           + string("/initPlacement_") 
                            + intoFourDigit(i) );
             // SavePlot( string("FIP - Iter: ") + to_string(i) );
         
@@ -179,7 +183,9 @@ void build_data_struct(bool initCoordi) {
         mdp = &moduleInstance[i];
 
         if( initCoordi ) {
+            //cout<<padding<<"alkjfnghklajgka"<<padding<<endl;
             mdp->center = place.center;
+            //mdp->center.Dump();
             mdp->center.z = tier_st[0].center.z;
         }
 
@@ -274,7 +280,7 @@ void build_data_struct(bool initCoordi) {
             if(pin_xmin) {
                 if(min_x > pin->fp.x) {
                     min_x = pin->fp.x;
-                    pin_xmin->X_MIN = 0;
+                    pin_xmin->X_MIN = 0;//! so only 4 bound pins for a net?
                     pin_xmin = pin;
                     pin->X_MIN = 1;
                 }
@@ -527,7 +533,7 @@ void CreateSparseMatrix(
         curModule = &moduleInstance[i];
 
         // 1d prec array
-        xcg_x(i) = curModule->center.x;
+        xcg_x(i) = curModule->center.x;//!
         ycg_x(i) = curModule->center.y;
 
         xcg_b(i) = ycg_b(i) = 0;
@@ -536,7 +542,7 @@ void CreateSparseMatrix(
     for(int i = 0; i < netCNT; i++) {
         tempNet = &netInstance[i];
         pinCNTinObject = tempNet->pinCNTinObject;
-        common1 = 1.0 / ((prec)pinCNTinObject - 1.0);
+        common1 = 1.0 / ((prec)pinCNTinObject - 1.0); // 1/(pincount - 1), isn't it 2? see kraftwerk2 for b2b net model
 
         for(int j = 0; j < pinCNTinObject; j++) {
             pin1 = tempNet->pin[j];
@@ -588,7 +594,7 @@ void CreateSparseMatrix(
                         wt_x = common1 / MIN_LEN;
                     }
 
-                    common2 = (-1.0) * wt_x;
+                    common2 = (-1.0) * wt_x;// subtraction
 
                     if(wt_x < 0)
                         printf("ERROR WEIGHT\n");
@@ -601,23 +607,25 @@ void CreateSparseMatrix(
                             T(moduleID1, moduleID2, common2));
                         tripletListX.push_back(
                             T(moduleID2, moduleID1, common2));
-
-                        xcg_b(moduleID1) += common2 * ((fp1.x - center1.x) -
-                                                       (fp2.x - center2.x));
-                        xcg_b(moduleID2) += common2 * ((fp2.x - center2.x) -
-                                                       (fp1.x - center1.x));
+                        //????
+                        // xcg_b(moduleID1) += common2 * ((fp1.x - center1.x) -
+                        //                                (fp2.x - center2.x));
+                        // xcg_b(moduleID2) += common2 * ((fp2.x - center2.x) -
+                        //                                (fp1.x - center1.x));
                     }
                     // 1 is terminal, 2 is module
                     else if(is_term1 && !is_term2) {
                         tripletListX.push_back(T(moduleID2, moduleID2, wt_x));
                         xcg_b(moduleID2) +=
-                            wt_x * (fp1.x - (fp2.x - center2.x));
+                            //wt_x * (fp1.x - (fp2.x - center2.x));
+                            wt_x*center1.x;
                     }
                     // 2 is terminal, 1 is module
                     else if(!is_term1 && is_term2) {
                         tripletListX.push_back(T(moduleID1, moduleID1, wt_x));
                         xcg_b(moduleID1) +=
-                            wt_x * (fp2.x - (fp1.x - center1.x));
+                            //wt_x * (fp2.x - (fp1.x - center1.x));
+                            wt_x*center2.x;
                     }
                 }
 
@@ -642,22 +650,24 @@ void CreateSparseMatrix(
                         tripletListY.push_back(
                             T(moduleID2, moduleID1, common2));
 
-                        ycg_b(moduleID1) += common2 * ((fp1.y - center1.y) -
-                                                       (fp2.y - center2.y));
-                        ycg_b(moduleID2) += common2 * ((fp2.y - center2.y) -
-                                                       (fp1.y - center1.y));
+                        // ycg_b(moduleID1) += common2 * ((fp1.y - center1.y) - // fp is pin absolute coor
+                        //                                (fp2.y - center2.y));
+                        // ycg_b(moduleID2) += common2 * ((fp2.y - center2.y) -
+                        //                                (fp1.y - center1.y));
                     }
                     // 1 is terminal, 2 is module
                     else if(is_term1 && !is_term2) {
                         tripletListY.push_back(T(moduleID2, moduleID2, wt_y));
                         ycg_b(moduleID2) +=
-                            wt_y * (fp1.y - (fp2.y - center2.y));
+                            //wt_y * (fp1.y - (fp2.y - center2.y));
+                            wt_y * center1.y;
                     }
                     // 2 is terminal, 1 is module
                     else if(!is_term1 && is_term2) {
                         tripletListY.push_back(T(moduleID1, moduleID1, wt_y));
                         ycg_b(moduleID1) +=
-                            wt_y * (fp2.y - (fp1.y - center1.y));
+                            //wt_y * (fp2.y - (fp1.y - center1.y));
+                            wt_y * center2.y;
                     }
                 }
             }

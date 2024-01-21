@@ -143,7 +143,7 @@ using std::map;
 using std::to_string;
 
 using google::dense_hash_map;
-
+const string padding(30, '=');
 struct POS;
 
 struct FPOS {
@@ -366,7 +366,7 @@ struct MODULE {
     FPOS size;
     FPOS half_size;
     FPOS center;
-    FPOS *pof;
+    FPOS *pof; //! pin offsets not stored in pin
     PIN **pin;
     prec area;
     char name[255];
@@ -1035,6 +1035,7 @@ extern string maxinflCMD;      // lutong
 extern string inflcoefCMD;     // lutong
 extern string filleriterCMD;
 extern string refdWLCMD;
+extern string numLayerCMD;// 2023 12.25 buyiding
 extern int conges_eval_methodCMD;  // grouter | prob
 
 extern bool isPlot;

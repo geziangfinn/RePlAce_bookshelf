@@ -96,10 +96,14 @@ struct POS dft_bin_2d;
 struct POS dft_bin_3d;
 
 void charge_fft_init(struct POS nbin, struct FPOS stp, int flg) {
+    cout<<padding<<endl;
+    stp.Dump();
+    nbin.Dump();
+    cout<<padding<<endl;
     if (flg)
-        charge_fft_init_3d(nbin, stp);
+        charge_fft_init_3d(nbin, stp);//! cGP first goes here in the general setup before opt
     else
-        charge_fft_init_2d(nbin, stp);
+        charge_fft_init_2d(nbin, stp);//! cGP actually goes here in cGP main
 }
 
 void charge_fft_init_2d(struct POS nbin, struct FPOS stp) {
@@ -200,7 +204,7 @@ void charge_fft_init_3d(struct POS nbin, struct FPOS stp) {
     wz2_3d_st = (prec *)malloc(sizeof(prec) * dft_bin_3d.z);
 
     for (x = 0; x < dft_bin_3d.x; x++) {
-        wx_3d_st[x] = PI * (prec)x / ((prec)dft_bin_3d.x * stp.x);
+        wx_3d_st[x] = PI * (prec)x / ((prec)dft_bin_3d.x * stp.x);// =inf when stp.x=0
         wx2_3d_st[x] = wx_3d_st[x] * wx_3d_st[x];
     }
 
@@ -265,7 +269,7 @@ void charge_fft_call_2d(void) {
 
             a_den = den_2d_st2[x][y];
 
-            if (x == 0 && y == 0) {
+            if (x == 0 && y == 0) {// remove dc component
                 a_phi = 0.0;
                 a_ex = 0.0;
                 a_ey = 0.0;

@@ -80,10 +80,10 @@ void setup_before_opt(void) {
 
     if(total_std_den > target_cell_den + Epsilon) {
         target_cell_den = total_std_den;
-        global_macro_area_scale = total_std_den;
+        global_macro_area_scale = total_std_den;// macro area scaling: see eplace paper
     }
-
-    total_modu_area = total_std_area + total_macro_area * target_cell_den;
+    // is this macro scaling???
+    total_modu_area = total_std_area + total_macro_area * target_cell_den;//? why *targe cell den here?
     inv_total_modu_area = 1.00 / total_modu_area;
 
     dp_margin_per_tier = 0.0f;
@@ -97,10 +97,10 @@ void setup_before_opt(void) {
     //
     wlen_init();
     msh_init();
-//    bin_init();
-
-    charge_fft_init(msh, bin_stp, 1);
-    update_cell_den();
+//    bin_init();// whatever....
+    //! 2023.12.27 buyiding: charge_fft_init and wcof_init are meaningless here because bin_stp=(0,0,0)? test: RePlace is runnable after commentting these 2 functions! results are same when running ibm01 mixed size
+    charge_fft_init(msh, bin_stp, 1);// bin_stp=(0,0,0) here
+    update_cell_den();// is this meaning less? 
     wcof_init(bin_stp);
 }
 
@@ -122,13 +122,17 @@ int setup_before_opt_mGP2D(void) {
 
 int setup_before_opt_cGP2D(void) {
     tier_init_2D(cGP2D);
-    bin_init_2D(cGP2D);
+    bin_init_2D(cGP2D);//!
     // routability
     if(routabilityCMD == true)
+    {   
+        cout<<"routabilityCMD=true"<<endl;
         tile_init_cGP2D();
+    }
+
     // if (isRoutabilityInit == false)     routability_init();
 
-    if(dim_bin_cGP2D.x <= dim_bin.x && dim_bin_cGP2D.y <= dim_bin.y) {
+    if(dim_bin_cGP2D.x <= dim_bin.x && dim_bin_cGP2D.y <= dim_bin.y) {//! dim_din=32*32*32, its a default bin size
         cout << "** ERROR: Minimum required Density is too low" << endl;
         cout << " Try Skip IP (initial placement) commend." << endl;
         exit(0);
@@ -216,7 +220,7 @@ void whitespace_init(void) {
         // if there is no shapes..
         if( shapeMap.find( curTerminal-> name ) == shapeMap.end() ) {
             for(int j = 0; j < place_st_cnt; j++) {
-                PLACE* pl = &place_st[j];
+                PLACE* pl = &place_st[j];//! a place is a row
 
 //                long commonArea = lGetCommonAreaXY( curTerminal->pmin, curTerminal->pmax, 
 //                                                   pl->org, pl->end ); 
@@ -387,15 +391,17 @@ void cell_filler_init() {
     prec f_area = 0;
     struct FPOS f_size = zeroFPoint;
     struct CELLx *gcell_st_tmp = NULL;
-    prec a = 0;
+    //prec a = 0;
     FILE *fp = NULL;
-//    char filler_fn[BUF_SZ];
+    //a = k_f2c * avg80p_cell_area;
+    //f_area = a;
+    f_area=k_f2c * avg80p_cell_area;
+
+    //    char filler_fn[BUF_SZ];
     struct FPOS org = zeroFPoint, end = zeroFPoint, len = zeroFPoint,
                 rnd = zeroFPoint;
 
 //    sprintf(filler_fn, "%s/%s_filler.txt", dir_bnd, gbch);
-    a = k_f2c * avg80p_cell_area;
-    f_area = a;
 
     if(flg_3dic) {
         f_size.x = avg80p_cell_dim.x;
@@ -416,7 +422,7 @@ void cell_filler_init() {
 
 //    fp = fopen(filler_fn, "w");
 
-    total_move_available_area = total_WS_area * target_cell_den;
+    total_move_available_area = total_WS_area * target_cell_den;//! * target densisty, see ePlace paper equation (13)
     total_filler_area = total_move_available_area - total_modu_area;
 
     if(total_filler_area < 0) {
@@ -435,7 +441,7 @@ void cell_filler_init() {
 
     if(flg_3dic) {
         printf(
-            "INFO:  FillerCell's X = %.6lf , FillerCell's Y = %.6lf, "
+            "INFO:  FillerCEll's X = %.6lf , FillerCell's Y = %.6lf, "
             "FillerCell's Z = %.6lf\n",
             filler_size.x, filler_size.y, filler_size.z);
 
@@ -465,7 +471,7 @@ void cell_filler_init() {
            moduleCNT, gfiller_cnt);
 
     for(i = moduleCNT; i < gcell_cnt; i++) {
-        filler = &gcell_st[i];
+        filler = &gcell_st[i];// ! filler also stored in gcell_st
         filler->flg = FillerCell;
         filler->idx = i - moduleCNT;
 
@@ -548,7 +554,7 @@ void cell_init(void) {
     mkl_free(cell_y_st);
     mkl_free(cell_z_st);
 
-    avg_cell_area = total_area / ((prec)(max_idx - min_idx));
+    avg_cell_area = total_area / ((prec)(max_idx - min_idx));// ? how to guarantee the avgx*avgy=avgarea??
     avg_cell_x = total_x / ((prec)(max_idx - min_idx));
     avg_cell_y = total_y / ((prec)(max_idx - min_idx));
     avg_cell_z = total_z / ((prec)(max_idx - min_idx));
@@ -561,22 +567,22 @@ void cell_init(void) {
     printf("INFO:  Average 80pct Cell Area = %.4lf\n", avg80p_cell_area);
 
     gcell_cnt = moduleCNT;
-    gcell_st = (struct CELLx *)mkl_malloc(sizeof(struct CELLx) * gcell_cnt, 64);
+    gcell_st = (struct CELLx *)mkl_malloc(sizeof(struct CELLx) * gcell_cnt, 64);//!
 
     for(i = 0; i < netCNT; i++) {
         net = &netInstance[i];
-        net->mod_idx = -1;
+        net->mod_idx = -1;//! 
         net->pin2 = (struct PIN **)mkl_malloc(
             sizeof(struct PIN *) * net->pinCNTinObject, 64);
         net->pinCNTinObject2 = net->pinCNTinObject;
         for(j = 0; j < net->pinCNTinObject2; j++) {
-            net->pin2[j] = net->pin[j];
+            net->pin2[j] = net->pin[j];//?
         }
     }
 
     for(i = 0; i < gcell_cnt; i++) {
         mdp = &moduleInstance[i];
-        cell = &gcell_st[i];
+        cell = &gcell_st[i];//! gcell_st includes macros
         cell->flg = mdp->flg;
         cell->idx = i;
         strcpy(cell->name, mdp->name);
@@ -584,7 +590,7 @@ void cell_init(void) {
         cell->half_size = mdp->half_size;
         cell->area = mdp->area;
         cell->pof = (struct FPOS *)mkl_malloc(
-            sizeof(struct FPOS) * mdp->pinCNTinObject, 64);
+            sizeof(struct FPOS) * mdp->pinCNTinObject, 64);//!
         cell->pin = (struct PIN **)mkl_malloc(
             sizeof(struct PIN *) * mdp->pinCNTinObject, 64);
         cell->pinCNTinObject = 0;
@@ -602,7 +608,7 @@ void cell_init(void) {
                 continue;
             }
             else {
-                net->mod_idx = i;
+                net->mod_idx = i;//!
                 cell->pin[cell->pinCNTinObject] = pin;
                 cell->pof[cell->pinCNTinObject] = pof;
                 cell->pinCNTinObject++;
@@ -702,7 +708,7 @@ void cell_copy(void) {
     struct CELLx *cell = NULL;
     struct MODULE *module = NULL;
 
-    for(int i = 0; i < moduleCNT; i++) {
+    for(int i = 0; i < moduleCNT; i++) {//! cell copy, not for fillers
         cell = &gcell_st[i];
         module = &moduleInstance[i];
 
@@ -1197,7 +1203,7 @@ void cg_input(struct FPOS *x_st, int N, int input) {
                 // printf("%.16f %.16f\n",center.x, center.y);
                 half_den_size = gcell_st[i].half_den_size;
                 // printf("%.16f %.16f\n",half_den_size.x, half_den_size.y);
-                x_st[i] = valid_coor00(center, half_den_size);
+                x_st[i] = valid_coor00(center, half_den_size);//! ensure cells in chip region x_st actually stores center coordinates
             }
             break;
 
@@ -1272,7 +1278,8 @@ void init_iter(struct ITER *it, int idx) {
 void gp_opt(void) {
     myNesterov ns_opt;
 
-    if(GP_DIM_ONE) {
+    if(GP_DIM_ONE) {// false when cGP2D
+        cout<<padding<<"3d"<<endl;
         shrink_gp_to_one();
     }
 
@@ -1283,6 +1290,7 @@ void gp_opt(void) {
     printf("PROC:  Start NESTEROV's Optimization\n");
     if(constraintDrivenCMD == false) {
         printf("PROC:    Global Lagrangian Multiplier is Applied\n");
+        cout<<"test 2023.12.24: "<<endl;
         ns_opt.nesterov_opt();
     }
     else if(constraintDrivenCMD == true) {
@@ -1443,7 +1451,7 @@ void cell_init_2D(void) {
          target_cell_den == 1.00 || target_cell_den == 0.80))) {
         for(z = 0; z < numLayer; z++) {
             tier = &tier_st[z];
-
+            //? Local Smoothness over Discrete Grids? 
             for(i = 0; i < tier->cell_cnt; i++) {
                 cell = tier->cell_st[i];
 
@@ -1482,13 +1490,15 @@ void cell_init_2D(void) {
     else {
         for(z = 0; z < numLayer; z++) {
             tier = &tier_st[z];
-
+            //? Local Smoothness over Discrete Grids? But why SQRT2????
+            cout<<"\nSQRT2\n";
             for(i = 0; i < tier->cell_cnt; i++) {
                 cell = tier->cell_st[i];
 
                 if(cell->size.x < tier->bin_stp.x * SQRT2) {
                     scal.x = cell->size.x / (tier->bin_stp.x * SQRT2);
                     cell->half_den_size.x = tier->half_bin_stp.x * SQRT2;
+                    //cout<<"\nSQRT2\n";
                 }
                 else {
                     scal.x = 1.0;
@@ -1519,13 +1529,15 @@ void cell_init_2D(void) {
     }
 }
 
-void update_cell_den() {
+void update_cell_den() {//? Local Smoothness over Discrete Grids? 
     struct CELLx *cell = NULL;
     struct FPOS scal = zeroFPoint;
-
+    cout<<padding<<endl;
+    bin_stp.Dump();
+    cout<<padding<<endl;
     for(int i = 0; i < gcell_cnt; i++) {
-        cell = &gcell_st[i];
-        if(cell->size.x < bin_stp.x) {
+        cell = &gcell_st[i];//cells and fillers 
+        if(cell->size.x < bin_stp.x) {//! bin_stp=x here!
             scal.x = cell->size.x / bin_stp.x;
             cell->half_den_size.x = half_bin_stp.x;
         }
@@ -1571,9 +1583,9 @@ void calc_average_module_width() {
 //
 // update msh, msh_yz, d_msh
 void msh_init() {
-    msh = dim_bin;
+    msh = dim_bin;//! 32*32*32
     msh_yz = msh.y * msh.z;
-    int d_msh = msh.x * msh.y * msh.z;
+    int d_msh = msh.x * msh.y * msh.z;//! 32*32*32
 
     printf("INFO:  D_MSH = %d \n", d_msh);
     printf("INFO:  MSH(X, Y, Z) = (%d, %d, %d)\n", msh.x, msh.y, msh.z);

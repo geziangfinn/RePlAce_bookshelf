@@ -56,7 +56,7 @@
 #include "mkl.h"
 #include "opt.h"
 
-void tier_init_2D(int STAGE) {
+void tier_init_2D(int STAGE) {//!
     int i = 0, z = 0;
     int min_idx = moduleCNT, max_idx = 0;
     struct TIER *tier = NULL;
@@ -64,7 +64,7 @@ void tier_init_2D(int STAGE) {
     struct CELLx *cell = NULL;
     struct CELLx *filler = NULL;
 
-    for(z = 0; z < numLayer; z++) {
+    for(z = 0; z < numLayer; z++) {//!
         tier = &tier_st[z];
         tier->cell_st = (struct CELLx **)mkl_malloc(
             sizeof(struct CELLx *) * (tier->modu_cnt + gfiller_cnt), 64);
@@ -77,7 +77,7 @@ void tier_init_2D(int STAGE) {
             if(modu->flg == Macro)
                 continue;
         }
-        z = modu->tier;
+        z = modu->tier;//! use of z is bad..., but ok
         cell = &gcell_st[i];
         tier = &tier_st[z];
         cell->tier = z;
@@ -87,25 +87,27 @@ void tier_init_2D(int STAGE) {
 
     for(z = 0; z < numLayer; z++) {
         tier = &tier_st[z];
-
+        //! see filler_init(), why is filler init mixed up in 2 functions? bad
         tier->filler_area =
-            (tier->area - tier->virt_area - tier->term_area) * target_cell_den -
+            (tier->area - tier->virt_area - tier->term_area) * target_cell_den -//! tier->ws_area = tier->area - tier->term_area - tier->virt_area
             tier->modu_area;
-
+        cout<<padding<<endl;
+        cout<<"virt "<<tier->virt_area<<endl;
+        cout<<padding<<endl;
         tier->filler_cnt = (int)(tier->filler_area / filler_area + 0.5);
-
+        //?! is filler_cnt calculated here different from filler_cnt calculated in filler_init()?
         max_idx = min_idx + tier->filler_cnt > gcell_cnt
                       ? gcell_cnt
                       : min_idx + tier->filler_cnt;
 
         for(i = min_idx; i < max_idx; i++) {
-            filler = &gcell_st[i];
+            filler = &gcell_st[i];//?
             filler->tier = z;
             tier->cell_st[tier->cell_cnt] = filler;
             tier->cell_cnt++;
         }
 
-        min_idx = max_idx;
+        min_idx = max_idx;//?
     }
 
     for(z = 0; z < numLayer; z++) {
@@ -147,7 +149,7 @@ void tier_delete_mGP2D(void) {
         tier->modu_st = NULL;
     }
 }
-
+//! should be aware of this function when going 3d
 void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
     int currTier = 0;
     int *z_st = (int *)mkl_malloc(sizeof(int) * numLayer, 64);
@@ -160,7 +162,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
     struct TIER *tier = NULL;
     struct PIN *pin = NULL;
 
-    for(currTier = 0; currTier < numLayer; currTier++) {
+    for(currTier = 0; currTier < numLayer; currTier++) {//!
         tier = &tier_st[currTier];
         tier->modu_cnt = 0;
         if(moduleCNT > 0)
@@ -168,7 +170,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
                 (struct MODULE **)malloc(sizeof(struct MODULE *) * moduleCNT);
         else
             tier->modu_st = NULL;
-        tier->modu_area = 0;
+        tier->modu_area = 0;//!
     }
 
     for(int i = 0; i < moduleCNT; i++) {
@@ -181,7 +183,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
                   max_pinCNTinObject_cmp);
             break;
 
-        case MIN_TIER_ORDER:
+        case MIN_TIER_ORDER:// goes here
             qsort(modu_st, moduleCNT, sizeof(struct MODULE *), min_tier_cmp);
             break;
 
@@ -192,7 +194,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
     }
 
     for(int i = 0; i < moduleCNT; i++) {
-        if(mode == STDCELLonly) {
+        if(mode == STDCELLonly) {//! cGP goes here
             if(modu_st[i]->flg == Macro)
                 continue;
             else
@@ -202,7 +204,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
             modu = modu_st[i];
         }
 
-        find_close_tier(modu->center.z, t0_st, z_st);
+        find_close_tier(modu->center.z, t0_st, z_st);//? effective after mGP 3D??
 
         for(int j = 0; j < numLayer; j++) {
             currTier = z_st[j];
@@ -210,7 +212,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
 
             if(mode == MIXED) {
                 if(modu->flg == Macro)
-                    modu_area = modu->area * target_cell_den;
+                    modu_area = modu->area * target_cell_den;// scaling here, but target cell den could be 1
                 else
                     modu_area = modu->area;
             }
@@ -223,10 +225,10 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
                 modu->center.z = tier->center.z;
                 modu->pmin.z = modu->center.z - modu->half_size.z;
                 modu->pmax.z = modu->center.z + modu->half_size.z;
-                modu->tier = currTier;
+                modu->tier = currTier;//!
 
                 tier->modu_st[tier->modu_cnt++] = modu;
-                tier->modu_area += modu_area;
+                tier->modu_area += modu_area;//!
 
                 for(int k = 0; k < modu->pinCNTinObject; k++) {
                     pin = modu->pin[k];
@@ -315,8 +317,8 @@ void init_tier(void) {
             pl_area = get_common_area(pl->org, pl->end, tier->pmin, tier->pmax);
             tier->pl_area += pl_area;
         }
-        tier->virt_area = tier->area - tier->pl_area;
-        tier->ws_area = tier->area - tier->term_area - tier->virt_area;
+        tier->virt_area = tier->area - tier->pl_area;//! virtu area: in chip but not placebale, usually 0
+        tier->ws_area = tier->area - tier->term_area - tier->virt_area;//? ws means whitespace? what about virt?
     }
 }
 

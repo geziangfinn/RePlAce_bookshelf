@@ -233,7 +233,10 @@ prec fp_product(struct FPOS a) {
 int p_product(struct POS a) {
     int product = a.x * a.y;
     if(flg_3dic)
+    {
         product *= a.z;
+    }
+
     return product;
 }
 
@@ -241,7 +244,11 @@ int p_max(struct POS a) {
     int m = 0;
     m = max(a.x, a.y);
     if(flg_3dic)
-        m = max(m, a.z);
+    {
+        m = max(m, a.z);//! z=0 when 2d so ok
+        cout<<"3dic: "<<m<<" "<<a.z<<endl;
+    }
+
     return m;
 }
 
@@ -352,7 +359,7 @@ int min_tier_cmp(const void *a, const void *b) {
     struct MODULE **aa = (struct MODULE **)a;
     struct MODULE **bb = (struct MODULE **)b;
 
-    return (*aa)->center.z > (*bb)->center.z ? 1 : 0;
+    return (*aa)->center.z > (*bb)->center.z ? 1 : 0;// sort by z
 }
 
 int max_area_dis_div_cmp(const void *a, const void *b) {

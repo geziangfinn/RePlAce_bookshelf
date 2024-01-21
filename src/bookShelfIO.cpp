@@ -143,6 +143,7 @@ void ParseBookShelf() {
     if(flg_3dic) {
         if(INPUT_FLG == IBM) {
             // orig: get_ibm_3d_dim by LW
+            get_ibm_3d_dim(&tier_min, &tier_max, &tier_row_cnt);
             get_mms_3d_dim(&tier_min, &tier_max, &tier_row_cnt);
         }
         else {
@@ -155,6 +156,7 @@ void ParseBookShelf() {
         post_read_2d();
     }
 */
+    //? what are these 3 variables for??
     POS tier_min, tier_max;
     int tier_row_cnt = 0;
 
@@ -169,7 +171,7 @@ void transform_3d(POS *tier_min, POS *tier_max, int tier_row_cnt) {
     TIER *tier = NULL;
     MODULE *curModule = NULL;
 
-    int tot_row_cnt = tier_row_cnt * numLayer;
+    int tot_row_cnt = tier_row_cnt * numLayer;//!
     // prec site_wid    = 0.0;
     // prec site_spa    = 0.0;
     // prec ori         = 0.0;
@@ -178,6 +180,7 @@ void transform_3d(POS *tier_min, POS *tier_max, int tier_row_cnt) {
     for(int i = 0; i < terminalCNT; i++) {
         curTerminal = &terminalInstance[i];
 
+        //! these are for 3d!
         // lutong
         // if (curTerminal->center.x > grow_pmin.x)
         // curTerminal->center.x
@@ -188,9 +191,9 @@ void transform_3d(POS *tier_min, POS *tier_max, int tier_row_cnt) {
         // = grow_pmin.y + (curTerminal->center.y - grow_pmin.y) *
         // shrunk_ratio.y;
 
-        curTerminal->tier = 0;
+        curTerminal->tier = 0;// !which tier
 
-        curTerminal->center.z = 0.5 * TIER_DEP;
+        curTerminal->center.z = 0.5 * TIER_DEP;//! DEP means depth?
 
         curTerminal->pmin.x = curTerminal->center.x - 0.5 * curTerminal->size.x;
         curTerminal->pmin.y = curTerminal->center.y - 0.5 * curTerminal->size.y;
@@ -249,7 +252,7 @@ void transform_3d(POS *tier_min, POS *tier_max, int tier_row_cnt) {
     // 
     // mgwoo
     //
-    assert( tot_row_cnt == row_cnt );
+    assert( tot_row_cnt == row_cnt );//! only applies for 3D?
 
 //    row_st = (ROW *)realloc(row_st, sizeof(struct ROW) * tot_row_cnt);
     tier_st = (TIER *)mkl_malloc(sizeof(struct TIER) * numLayer, 64);
@@ -275,7 +278,7 @@ void transform_3d(POS *tier_min, POS *tier_max, int tier_row_cnt) {
     for(int i = 0; i < numLayer; i++) {
         tier = &tier_st[i];
         tier->row_st = &(row_st[tier_row_cnt * i]);
-        tier->row_cnt = tier_row_cnt;
+        tier->row_cnt = tier_row_cnt;// chip row count
         tier->term_cnt = 0;
 
         if(terminalCNT > 0) {
@@ -431,7 +434,7 @@ void post_read_3d(void) {
                get_abs(curModule->size.y - 216) < Epsilon) {
                 // stupid 504 x 216 cell overlap problem (w/ terminal) ISPD 2005
                 // b3 case.
-                curModule->flg = StdCell;
+                curModule->flg = StdCell;// ? 到底是StdCell还是Macro?
                 placementStdcellCNT++;
                 // tmpMultiHeightCellCNT++;
                 // CAUTION!!
@@ -479,7 +482,7 @@ void post_read_3d(void) {
                 // //lutong
                 curModule->flg = Macro;
                 placementMacroCNT++;
-                total_macro_area += curModule->area;
+                total_macro_area += curModule->area;// 这样来判断是macro还是std cell: terminal既不是macro也不是cell! 
             }
             else if(curModule->size.y - rowHeight < -Epsilon) {
                 printf("*** ERROR:  Cell \"%d\" Height ERROR \n", i);
@@ -497,7 +500,7 @@ void post_read_3d(void) {
            placementStdcellCNT /* - tmpMultiHeightCellCNT*/,
            placementMacroCNT /* + tmpMultiHeightCellCNT*/, terminalCNT);
 
-    gmov_mac_cnt = placementMacroCNT;
+    gmov_mac_cnt = placementMacroCNT;// ! g means global? also applies for other "g..." variables
 
     
     // initial malloc : row_cnt
@@ -537,11 +540,11 @@ void post_read_3d(void) {
             curPlace->stp.y = rowHeight;
             curPlace->stp.z = TIER_DEP;
 
-            curPlace->cnt.x = curPlace->end.x - curPlace->org.x;
+            curPlace->cnt.x = curPlace->end.x - curPlace->org.x;//! presuming sitewidth=1?/ sitespacing=1
             curPlace->cnt.y = curPlace->end.y - curPlace->org.y;
             curPlace->cnt.z = curPlace->end.z - curPlace->org.z;
 
-            curPlace->area = curPlace->cnt.x * curPlace->cnt.y * curPlace->cnt.z;
+            curPlace->area = curPlace->cnt.x * curPlace->cnt.y * curPlace->cnt.z;//! so cnt means length width?
 
             curPlace->center.x = 0.5 * (curPlace->org.x + curPlace->end.x);
             curPlace->center.y = 0.5 * (curPlace->org.y + curPlace->end.y);
@@ -600,7 +603,7 @@ void post_read_3d(void) {
 
     // global variable 'place' update
     place.stp.x = SITE_SPA;
-    place.stp.y = 1.0; // rowHeight....................????
+    place.stp.y = 1.0; //? rowHeight....................????
     place.stp.z = TIER_DEP;
 
     place.org = place_st[0].org;
@@ -1389,12 +1392,12 @@ int read_nodes_3D(char *input) {
 
     moduleCNT -= terminalCNT;
     moduleInstance =
-        (struct MODULE *)mkl_malloc(sizeof(struct MODULE) * moduleCNT, 64);
+        (struct MODULE *)mkl_malloc(sizeof(struct MODULE) * moduleCNT, 64); //buyiding: vector for modules
     terminalInstance =
         (struct TERM *)mkl_malloc(sizeof(struct TERM) * terminalCNT, 64);
 
-    // why this is required..
-    // terminal_size_max = zeroFPoint;
+    //? why this is required..
+    terminal_size_max = zeroFPoint;
     // module_size_max = zeroFPoint;
 
     // to find max size..
@@ -1441,7 +1444,7 @@ int read_nodes_3D(char *input) {
         prec z = TIER_DEP;
 
 #if PREC_MODE == IS_FLOAT
-        if(flg_3dic_io) {
+        if(flg_3dic_io) {//! x,y,z are not coordinates here! but size
             sscanf(line, "%s%f%f%f%s\n", nodeName, &x, &y, &z, node_type);
         }
         else {
@@ -1504,7 +1507,7 @@ int read_nodes_3D(char *input) {
             curModule->size.y = y;
             curModule->half_size.y = 0.5 * curModule->size.y;
 
-            curModule->size.z = z;
+            curModule->size.z = z;//! 3d
             curModule->half_size.z = 0.5 * curModule->size.z;
 
             // update area
@@ -1516,7 +1519,7 @@ int read_nodes_3D(char *input) {
             curModule->pin = NULL;
             curModule->netCNTinObject = 0;
             curModule->pinCNTinObject = 0;
-
+            // ! buyiding: recording min/max width and height
             // max_min update for x.
             if(maxCell.x < curModule->size.x)
                 maxCell.x = curModule->size.x;
@@ -1565,7 +1568,7 @@ int read_nodes_3D(char *input) {
             curTerminal->size.x = x;
             curTerminal->size.y = y;
 
-            // if Non-Image mode, ignore width & height
+            //! if Non-Image mode, ignore width & height
             if(isTerminalNI) {
                 curTerminal->size.x = curTerminal->size.y = 0.0;
                 curTerminal->isTerminalNI = true;
@@ -1649,6 +1652,7 @@ int read_nodes_3D(char *input) {
            maxTerm.y);
     printf("INFO:               AvgX=%.2lf, AvgY=%.2lf\n", avgTerminalSize.x,
            avgTerminalSize.y);
+    //? what is max_mac_dim? 2023.12.25 buyiding
     max_mac_dim.x = maxCell.x;
     max_mac_dim.y = maxCell.y;
     max_mac_dim.z = maxCell.z;
@@ -1848,7 +1852,7 @@ int read_nets_3D(char *input) {
 
         token = strtok(NULL, " \t\n");
         token = strtok(NULL, " \t\n");
-        curNet->pinCNTinObject = atoi(token);
+        curNet->pinCNTinObject = atoi(token);// READ PIN NUMBER 2023.12.25 buyiding
 
         token = strtok(NULL, " \t\n");
 
@@ -2091,7 +2095,7 @@ int read_pl2(char *input) {
                     curModule->pmin.z = 0;
                 }
             }
-
+            //! pin: pos min? ll? pmax: pos max? ur?
             curModule->center.x = curModule->pmin.x + curModule->half_size.x;
             curModule->center.y = curModule->pmin.y + curModule->half_size.y;
 
@@ -2176,7 +2180,7 @@ int read_scl(char *input) {
     token = strtok(NULL, " \t\n");
     token = strtok(NULL, " \t\n");
 
-    row_cnt = atoi(token);
+    row_cnt = atoi(token);//! row_cnt assigned here
 //    row_st = (struct ROW *)malloc(sizeof(struct ROW) * row_cnt);
     // call constructor
 //    row_st = new ROW[row_cnt];
@@ -2266,7 +2270,7 @@ int read_scl(char *input) {
 
         if(i == 0) {
             rowHeight = row->size.y;
-            SITE_SPA = row->site_spa;
+            SITE_SPA = row->site_spa;//! SITE_SPA: site spacing buyiding 2023.12.25
         }
         else if(rowHeight != row->size.y) {
             printf("Error: ROW HEIGHT INCONSISTENT!\n");
@@ -2655,6 +2659,55 @@ void output_pl(char *output) {
             //}
         }
     }
+    fclose(fp);
+}
+
+void output_pl_iter(char *output) {
+    FILE *fp = fopen(output, "w");
+    struct MODULE *curModule = NULL;
+    struct TERM *curTerminal = NULL;
+
+    fputs("UCLA pl 1.0 \n", fp);
+    fputs("# Created	:	Jan  6 2005\n", fp);
+    fputs(
+        "# User   	:	Gi-Joon Nam & Mehmet Yildiz at IBM Austin "
+        "Research({gnam, mcan}@us.ibm.com)\n",
+        fp);
+    fputs("\n", fp);
+
+    for(int i=0; i<gcell_cnt; i++) {
+        CELLx* curGCell = &gcell_st[i];
+        
+        if( curGCell -> flg == FillerCell ) {
+            continue;
+        }
+        
+        curGCell->pmin.x = curGCell->center.x - 0.5*curGCell->size.x;
+        curGCell->pmax.x = curGCell->center.x + 0.5*curGCell->size.x;
+
+        curGCell->pmin.y = curGCell->center.y - 0.5*curGCell->size.y;
+        curGCell->pmax.y = curGCell->center.y + 0.5*curGCell->size.y;
+
+        fprintf(fp, "%s %.6lf\t%.6lf\t%.6lf\t: N\n", curGCell->name,
+                curGCell->pmin.x, curGCell->pmin.y, curGCell->pmin.z);
+    }
+    for(int i = 0; i < terminalCNT; i++) {
+        curTerminal = &terminalInstance[i];
+        // if (!curTerminal->isTerminalNI) {
+        fprintf(fp, "%s %d\t%d\t%d\t: N /FIXED\n", curTerminal->name,
+                prec2int(curTerminal->pmin.x),
+                prec2int(curTerminal->pmin.y),
+                prec2int(curTerminal->pmin.z));
+        //} else {
+        // fprintf (fp, "%s %d\t%d\t%d\t: N /FIXED_NI\n",
+        // curTerminal->name,
+        // prec2int (curTerminal->pmin.x),
+        // prec2int (curTerminal->pmin.y),
+        // prec2int (curTerminal->pmin.z));
+        //}
+    }
+
+
     fclose(fp);
 }
 
@@ -3843,12 +3896,12 @@ void get_3d_dimension(struct POS *tier_min, struct POS *tier_max,
 
 // 
 // update tier_min, tier_max, and tier_row_cnt
-//
+//? mms= mixed size?
 void get_mms_3d_dim(POS *tier_min, POS *tier_max,
                     int *tier_row_cnt) {
     int xlen = 0;
     int ylen = 0;
-
+    //! grow: row, see read scl
     xlen = grow_pmax.x - grow_pmin.x;
     ylen = grow_pmax.y - grow_pmin.y;
     prec aspect_ratio = (prec)ylen / (prec)xlen;
@@ -3880,10 +3933,10 @@ void get_mms_3d_dim(POS *tier_min, POS *tier_max,
     }
     else {
         if(strcmp(bmFlagCMD.c_str(), "etc") == 0) {
-            shrunk_len.x = pow(xlen * ylen / aspect_ratio, 0.5);
-            shrunk_len.y = pow(xlen * ylen * aspect_ratio, 0.5);
+            shrunk_len.x = pow(xlen * ylen / aspect_ratio, 0.5);//? =xlen?
+            shrunk_len.y = pow(xlen * ylen * aspect_ratio, 0.5);//? =ylen?
         }
-        else {
+        else {//! ExtraWSfor3D! mentioned in ePlace 3D
             shrunk_len.x = pow((1.0 + ExtraWSfor3D) * xlen * ylen /
                                    target_cell_den / (numLayer * aspect_ratio),
                                0.5);
@@ -3985,7 +4038,7 @@ void get_mms_3d_dim(POS *tier_min, POS *tier_max,
                shrunk_len_int.y);
     }
 }
-
+//!!!!
 void get_ibm_3d_dim(struct POS *tier_min, struct POS *tier_max,
                     int *tier_row_cnt) {
     if(INPUT_FLG != IBM) {

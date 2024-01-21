@@ -41,11 +41,11 @@ LEFLIB         	= -L$(LEFROOT)/lib -llef -llefzlib -lclef -lclefzlib
 VERILOGLIB 		= -L$(VERILOGROOT)/lib -lverilog_parser 
 
 ifndef	MKLROOT
-    MKLROOT		=	/home/tool/intel/compilers_and_libraries_2016.3.210/linux/mkl
+    MKLROOT		=	/opt/intel/oneapi/mkl/2024.0
 endif
 
 ifndef	IPPROOT
-    IPPROOT		=	/home/tool/intel/compilers_and_libraries_2016.3.210/linux/ipp
+    IPPROOT		=	/opt/intel/oneapi/ipp/2021.10
 endif
 
 HASHROOT 		= ../module/sparsehash/install-sp/include

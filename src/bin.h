@@ -79,7 +79,7 @@ struct BIN {
     prec cell_area;
     prec cell_area2;
 
-    prec virt_area;
+    prec virt_area;//area inside a bin but not inside a placement row
     long term_area; // mgwoo
 
     prec filler_area;

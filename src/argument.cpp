@@ -152,9 +152,9 @@ void initArgument(int argc, char *argv[]) {
 
 
     ref_dwl0 = atof(refdWLCMD.c_str());
-    ExtraWSfor3D = 0;     //.12; //0.1;
+    ExtraWSfor3D = 0;     //.12; //0.1; // ! need to modify here for 3D!
     MaxExtraWSfor3D = 0;  //.20; //0.2;
-    dim_bin.x = atoi(bxMaxCMD.c_str());
+    dim_bin.x = atoi(bxMaxCMD.c_str());//! dim_bin default: 32*32*32
     dim_bin.y = atoi(byMaxCMD.c_str());
     dim_bin.z = atoi(bzMaxCMD.c_str());
 
@@ -274,7 +274,6 @@ bool argument(int argc, char *argv[]) {
                 return false;
             }
         }
-        /*
         else if(!strcmp(argv[i], "-numLayer")) {
             i++;
             if(argv[i][0] != '-') {
@@ -287,6 +286,7 @@ bool argument(int argc, char *argv[]) {
                 return false;
             }
         }
+        /*
         else if(!strcmp(argv[i], "-ar")) {
             i++;
             if(argv[i][0] != '-') {

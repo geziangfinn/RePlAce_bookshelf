@@ -339,6 +339,7 @@ string pincntcoefCMD;   // lutong
 string routepath_maxdistCMD;
 string gRoute_pitch_scalCMD;
 string filleriterCMD;
+string numLayerCMD;
 
 // for detail Placer
 int dpMode;
@@ -405,7 +406,7 @@ int main(int argc, char *argv[]) {
     printf("PROC:  BEGIN IMPORTING PLACEMENT INPUT\n");
     
     ParseInput();
-
+    //numLayer=2;
     if(numLayer > 1)
         calcTSVweight();
     
@@ -428,6 +429,7 @@ int main(int argc, char *argv[]) {
         time_end(&time_ip);
         printf("PROC:  END INITIAL PLACEMENT (IP)\n\n\n");
         fflush(stdout);
+        //exit(0);
         ///////////////////////////////////////////////////////////////////////
 
         ///////////////////////////////////////////////////////////////////////
@@ -700,7 +702,7 @@ void init() {
         exit(1);
     }
 
-    global_macro_area_scale = target_cell_den;
+    global_macro_area_scale = target_cell_den;//!! macro scale!!
     printf("INFO:  Target Density = %.6lf\n", target_cell_den);
 
     wcof_flg = /* 1 */ 2 /* 3 */;
@@ -714,8 +716,8 @@ void init() {
             if(INPUT_FLG == ISPD05 || INPUT_FLG == ISPD06 ||
                INPUT_FLG == ISPD || INPUT_FLG == MMS || INPUT_FLG == SB ||
                INPUT_FLG == ETC) {
-                wcof00_dim1.x = wcof00_dim1.y = wcof00_dim1.z = 0.50;  // 500.0;
-                wcof00_org.x = wcof00_org.y = wcof00_org.z = 0.125;
+                wcof00_dim1.x = wcof00_dim1.y = wcof00_dim1.z = 0.50;  // 500.0; ? why 0.5?
+                wcof00_org.x = wcof00_org.y = wcof00_org.z = 0.125;//! 1/8, 8=80*0.1
             }
             else if(INPUT_FLG == IBM) {
                 wcof00_dim1.x = wcof00_dim1.y = wcof00_dim1.z = 0.50;
@@ -820,9 +822,10 @@ void init() {
 
 void calcTSVweight() {
     TSV_WEIGHT = TSV_CAP * ((prec)numLayer) /
-                 (ROW_CAP * (prec)(tier_st[0].row_cnt)) * gtsv_cof;
-    if(INPUT_FLG == IBM)
-        TSV_WEIGHT = 0.73 * gtsv_cof;
+                 (ROW_CAP * (prec)(tier_st[0].row_cnt)) * 1;
+    // if(INPUT_FLG == IBM)
+    //     TSV_WEIGHT = 0.73 * gtsv_cof;
+    cout<<"gtsv="<<gtsv_cof<<endl;
     printf("INFO:  TSV_WEIGHT = %.6E\n", TSV_WEIGHT);
 }
 
@@ -959,7 +962,7 @@ void tcGP2DglobalPlacement_main() {
 void cGP2DglobalPlacement_main() {
     STAGE = cGP2D;
     // ALPHA = initialALPHA;
-    GP_DIM_ONE = false;
+    GP_DIM_ONE = false;//!!!
 
     tier_assign(STDCELLonly);
     setup_before_opt_cGP2D();

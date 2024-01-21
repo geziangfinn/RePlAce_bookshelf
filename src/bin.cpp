@@ -267,7 +267,7 @@ void bin_init() {
 // TIER->bin_mat update
 //
 //
-void bin_init_2D(int STAGE) {
+void bin_init_2D(int STAGE) {//!!
 
     if(STAGE == cGP2D) {
         dim_bin_cGP2D.x = dim_bin_cGP2D.y = 0;
@@ -283,7 +283,7 @@ void bin_init_2D(int STAGE) {
         int ideal_bin_cnt = INT_CONVERT(tier->area / ideal_bin_area);
 
         bool isUpdate = false;
-        for(int i = 1; i <= 10; i++) {
+        for(int i = 1; i <= 10; i++) {//! 4*4,8*8,16*16,32*32...
             if((2 << i) * (2 << i) <= ideal_bin_cnt &&
                (2 << (i + 1)) * (2 << (i + 1)) > ideal_bin_cnt) {
                 tier->dim_bin.x = tier->dim_bin.y = 2 << i;
@@ -293,7 +293,7 @@ void bin_init_2D(int STAGE) {
         }
 
         if(!isUpdate) {
-            tier->dim_bin.x = tier->dim_bin.y = 1024;
+            tier->dim_bin.x = tier->dim_bin.y = 1024;//!
         }
 
         if(STAGE == mGP2D) {
@@ -334,11 +334,15 @@ void bin_init_2D(int STAGE) {
         //        dim_bin_cGP2D.y *= 2;
         //    }
         //}
-        bin_stp_cGP2D.x = place.cnt.x / (prec)dim_bin_cGP2D.x;
-        bin_stp_cGP2D.y = place.cnt.y / (prec)dim_bin_cGP2D.y;
+        bin_stp_cGP2D.x = place.cnt.x / (prec)dim_bin_cGP2D.x;// place.cnt.x is the width of chip
+        bin_stp_cGP2D.y = place.cnt.y / (prec)dim_bin_cGP2D.y;//! bin_Step: bin width/height
         bin_stp_cGP2D.z = TIER_DEP;
         printf("INFO:  dim_bin_cGP2D.(x,y) = (%d, %d)\n", dim_bin_cGP2D.x,
                dim_bin_cGP2D.y);
+        //                cout<<padding<<endl;
+        // cout<<"dimbin in bin_init: ";
+        // dim_bin.Dump();//! not tier->din_bin but dim_bin
+        // cout<<padding<<endl;
     }
     
     bin_mat_st = (BIN **)mkl_malloc(sizeof(BIN *) * numLayer, 64);
@@ -352,9 +356,9 @@ void bin_init_2D(int STAGE) {
 
 //        tier->dim_bin.Dump("tier->dim_bin");
 
-        tier->tot_bin_cnt = tier->dim_bin.x * tier->dim_bin.y;
-
-        tier->bin_stp.x = tier->size.x / tier->dim_bin.x;
+        tier->tot_bin_cnt = tier->dim_bin.x * tier->dim_bin.y;//! example: 32*32
+        //? is tier->size=place.cnt? try cout to see
+        tier->bin_stp.x = tier->size.x / tier->dim_bin.x;//? why not equal to bin_stp_cGP2D??? bin_stp_cGP2D wasted?
         tier->bin_stp.y = tier->size.y / tier->dim_bin.y;
         tier->bin_stp.z = TIER_DEP;
 
@@ -381,7 +385,7 @@ void bin_init_2D(int STAGE) {
 
         // for each allocated bin_mat_st..
         for(int i = 0; i < tier->tot_bin_cnt; i++) {
-            POS p( i / tier->dim_bin.y, i % tier->dim_bin.y, z);
+            POS p( i / tier->dim_bin.y, i % tier->dim_bin.y, z);//?! p means bin x y (bin index = x*stpx+y)
 
             BIN *bp = &tier->bin_mat[i];
 
@@ -473,7 +477,7 @@ void bin_init_2D(int STAGE) {
 
             int z = mac->tier;
             TIER *tier = &tier_st[z];
-            UpdateTerminalArea(tier, &(mac->pmin), &(mac->pmax));
+            UpdateTerminalArea(tier, &(mac->pmin), &(mac->pmax));//!!! terminal density scaling
         }
     }
 
@@ -930,7 +934,7 @@ void bin_update(int N) {
     if(STAGE == mGP3D || STAGE == cGP3D || STAGE == mLG3D)
         return bin_update7(N);
     else if(STAGE==cGP2D) 
-        return bin_update7_cGP2D();
+        return bin_update7_cGP2D();//! calculuate density, phi and e!!!!
     else if(STAGE == mGP2D)
         return bin_update7_mGP2D();
 }
@@ -1089,7 +1093,7 @@ void bin_update7_cGP2D() {
         BIN* bp = &tier->bin_mat[i];
         bp->cell_area = 0;
         bp->cell_area2 = 0;
-    }
+    }//! clear cell area for update
     }
     if(timeon) { time_end(&time); cout << "initialize: " << time << endl; time_start(&time);}
 
@@ -1107,7 +1111,7 @@ void bin_update7_cGP2D() {
 
 //#pragma omp for
     for(i = 0; i < tier->cell_cnt; i++) {
-        den_comp_2d_cGP2D(tier->cell_st[i], tier);
+        den_comp_2d_cGP2D(tier->cell_st[i], tier);//!!
     }
 //}
 
@@ -1127,10 +1131,10 @@ void bin_update7_cGP2D() {
         prec area_num2 = bp->cell_area + bp->virt_area + bp->term_area;
         prec area_num = area_num2 + bp->cell_area2;
 
-        bp->den = area_num * tier->inv_bin_area;
+        bp->den = area_num * tier->inv_bin_area;//! cell+ filler area / bin area
         bp->den2 = area_num2 * tier->inv_bin_area;
 
-        copy_den_to_fft_2D(bp->den, bp->p);
+        copy_den_to_fft_2D(bp->den, bp->p);//! p: binIdx in x and y dimension
     }
     }
     if(timeon) { time_end(&time); cout << "bin 1st update: " << time << endl; time_start(&time); }
@@ -1152,7 +1156,7 @@ void bin_update7_cGP2D() {
         copy_e_from_fft_2D(&(bp->e), bp->p);
         copy_phi_from_fft_2D(&(bp->phi), bp->p);
 
-        gsum_phi += bp->phi * bp->cell_area + bp->phi * bp->cell_area2 +
+        gsum_phi += bp->phi * bp->cell_area + bp->phi * bp->cell_area2 +//! potential energy
             bp->phi * bp->term_area + bp->phi * bp->virt_area;
         
 //        cout << i << " " << gsum_phi << endl;
@@ -1164,7 +1168,7 @@ void bin_update7_cGP2D() {
 //        prec ovf_cell_area = ovf_cell_den * tier->bin_area;
 //        sum_ovf_area += ovf_cell_area;
         
-        sum_ovf_area += max((prec)0.0, bp->den2 - target_cell_den) * tier->bin_area;
+        sum_ovf_area += max((prec)0.0, bp->den2 - target_cell_den) * tier->bin_area;//! calculate overflow! overflow is calculated without considering fillers!
     }
 
     if(timeon) { time_end(&time); cout << "bin final loop: " << time << endl; }
@@ -1176,7 +1180,7 @@ void bin_update7_cGP2D() {
 //    cout << "gsum_ovf_area: " << gsum_ovf_area << endl;
 //    cout << "total_modu_area: " << total_modu_area << endl;
 
-    gsum_ovfl = gsum_ovf_area / total_modu_area;
+    gsum_ovfl = gsum_ovf_area / total_modu_area;//! tier->sum_ovf should equal to gsum_ovfl if tier=1, total modu area is calculated with scaling
 //    cout << "gsumovfl: " << gsum_ovfl << endl;
 //    exit(1);
 }
@@ -1795,11 +1799,12 @@ void den_comp_2d_mGP2D(CELLx *cell, TIER *tier) {
 void den_comp_2d_cGP2D(CELLx *cell, TIER *tier) {
 
     POS b0, b1;
-    b0.x = INT_DOWN((cell->den_pmin.x - tier->bin_org.x) * tier->inv_bin_stp.x);
+    b0.x = INT_DOWN((cell->den_pmin.x - tier->bin_org.x) * tier->inv_bin_stp.x);//! bin_org?
     b0.y = INT_DOWN((cell->den_pmin.y - tier->bin_org.y) * tier->inv_bin_stp.y);
 
     b1.x = INT_DOWN((cell->den_pmax.x - tier->bin_org.x) * tier->inv_bin_stp.x);
-    b1.y = INT_DOWN((cell->den_pmax.y - tier->bin_org.y) * tier->inv_bin_stp.y);
+    b1.y = INT_DOWN((cell->den_pmax.y - tier->bin_org.y) * tier->inv_bin_stp.y);// 计算cell占了哪几格(哪几个bin),b0即起始bin
+    //! cell->den_pmax, not cell width and height+cell ll
 
     if(b0.x < 0)
         b0.x = 0;
@@ -1819,7 +1824,7 @@ void den_comp_2d_cGP2D(CELLx *cell, TIER *tier) {
     if(b1.y > tier->dim_bin.y - 1)
         b1.y = tier->dim_bin.y - 1;
 
-    int idx = b0.x * tier->dim_bin.y + b0.y;
+    int idx = b0.x * tier->dim_bin.y + b0.y;// start from this bin
 
     int x = 0, y = 0;
     BIN *bpx = NULL, *bpy = NULL;
@@ -1839,14 +1844,14 @@ void den_comp_2d_cGP2D(CELLx *cell, TIER *tier) {
 //            prec area_share = (max_x - min_x) * (max_y - min_y) * cell->size.z *
 //                         cell->den_scal;
             prec area_share = (max_x - min_x) * (max_y - min_y) *
-                         cell->den_scal;
+                         cell->den_scal;//! local smooth
 
-            if(cell->flg == FillerCell) {
+            if(cell->flg == FillerCell) {//?
                 bpy->cell_area2 += area_share;
             }
             // mod LW 10/29/16 ev609
             else if(cell->flg == Macro) {
-                bpy->cell_area += area_share * global_macro_area_scale;
+                bpy->cell_area += area_share * global_macro_area_scale;//! macro density scaling!!!
             }
             else {
                 bpy->cell_area += area_share;

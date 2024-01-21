@@ -112,6 +112,7 @@ void extract_dir(char *f, char *d);
 void extract_sfx(char *f, char *s);
 
 void output_pl(char *output);
+void output_pl_iter(char *output);
 void output_cGP3D_pl(char *output);
 void output_mGP2D_pl(char *output);
 void output_cGP2D_pl(char *output);

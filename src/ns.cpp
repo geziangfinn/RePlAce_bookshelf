@@ -77,7 +77,7 @@ void myNesterov::nesterov_opt() {
 
     InitializationCostFunctionGradient(&sum_wgrad, &sum_pgrad);
 
-    InitializationCoefficients();
+    InitializationCoefficients();// wcof updated here after net_update!
 
 //    cout << it->ovfl << endl;
     if(DEN_ONLY_PRECON) {
@@ -142,12 +142,12 @@ void myNesterov::nesterov_opt() {
 }
 
 void myNesterov::InitializationCommonVar() {
-    N = gcell_cnt;
-    N_org = moduleCNT;
+    N = gcell_cnt;//! cells+fillers
+    N_org = moduleCNT;//! cells
     start_idx = 0;
     end_idx = N;
 
-    if(dynamicStepCMD)
+    if(dynamicStepCMD)// false here
         max_iter = 6000;
     else
         max_iter = 2500;
@@ -338,7 +338,7 @@ void myNesterov::InitializationCoefficients() {
             BETA = BETAcGP;
         }
         wcof = get_wlen_cof(gsum_ovfl);
-        wlen_cof = fp_mul(base_wcof, wcof);
+        wlen_cof = fp_mul(base_wcof, wcof);//! base_wcof was actually used!!!!
         wlen_cof_inv = fp_inv(wlen_cof);
         // IK
         if(!routabilityCMD)
@@ -943,8 +943,8 @@ void getCostFuncGradient2(struct FPOS *dst, struct FPOS *wdst,
             }
         }
 
-        wdst[i] = wgrad;
-        pdst[i] = pgrad;
+        wdst[i] = wgrad;// wgrad: wirelength gradient
+        pdst[i] = pgrad;// pgrad: potential gradient
 
         dst[i].x = wgrad.x + opt_phi_cof * pgrad.x;
         dst[i].y = wgrad.y + opt_phi_cof * pgrad.y;
@@ -1286,7 +1286,7 @@ void myNesterov::UpdateNesterovIter(int iter, struct ITER *it,
     //    alphaArrCD[iter%100] = ALPHA;
     //    deltaArrCD[iter%100] = initialALPHA2D;
     //}
-
+    bool outputPL=true;// 2023.1.8 buyiding for yaguang li project
     if(!FILLER_PLACE) {
         it->tot_hpwl = GetHpwl();
         it->tot_stnwl = total_stnwl.x + total_stnwl.y;  // lutong
@@ -1340,7 +1340,7 @@ void myNesterov::UpdateNesterovIter(int iter, struct ITER *it,
         it->tot_wlen = 0;
     }
 
-    if( isPlot && iter % 10 == 0 ){
+    if(  iter % 10 == 0 ){
         cell_update(x_st, N);
 
         // For circuit viewer
@@ -1349,8 +1349,15 @@ void myNesterov::UpdateNesterovIter(int iter, struct ITER *it,
         // For JPEG Saving
         SavePlotAsJPEG(string("Nesterov - Iter: " + std::to_string(iter)), true,
                        string(dir_bnd) 
-                       + string("/cell/cell_") 
+                       + string("/cell_") 
                        + intoFourDigit(iter) );
+    }
+
+    if(outputPL)
+    {
+        string fileName=string(dir_bnd) +"/"+benchName+string("_iter_" + std::to_string(iter))+".pl";
+        char* filename=(char*)fileName.c_str();
+        output_pl_iter(filename);
     }
 
     // if ((approxiPlotCMD && (iter%10 == 0 || iter==1)) || (approxiPlotCMD &&
@@ -1456,7 +1463,7 @@ void myNesterov::InitializationCostFunctionGradient(prec *sum_wgrad0,
                 pgradl.SetZero();
             }
             else {
-                if(constraintDrivenCMD == false)
+                if(constraintDrivenCMD == false)//! usually goes here
                     potn_grad_2D(i, &pgrad);
                 else if(constraintDrivenCMD == true) {
                     if(lambda2CMD == false)
@@ -1487,15 +1494,18 @@ void myNesterov::InitializationCostFunctionGradient(prec *sum_wgrad0,
             // pgradl.z= 0.0;
         }
 
-        y_wdst[i] = wgrad;
-        y_pdst[i] = pgrad;
+        y_wdst[i] = wgrad;// 
+        y_pdst[i] = pgrad;// y_pdst: store pgrad
         if(lambda2CMD == true)
             y_pdstl[i] = pgradl;
 
-        tmp_sum_wgrad += fabs(wgrad.x) + fabs(wgrad.y);  // + fabs(wgrad.z);
+        tmp_sum_wgrad += fabs(wgrad.x) + fabs(wgrad.y);  // + fabs(wgrad.z); fabs so *-1 doesn't matter?
+        //cout<<padding<<"wgrad: ";// ! wgrad ==0?
+        //wgrad.Dump();
+        //cout<<endl;
         tmp_sum_pgrad += fabs(pgrad.x) + fabs(pgrad.y);  // + fabs(pgrad.z);
     }
-    *sum_wgrad0 = tmp_sum_wgrad;
+    *sum_wgrad0 = tmp_sum_wgrad;//! calculated for coefficient initialization
     *sum_pgrad0 = tmp_sum_pgrad;
 }
 

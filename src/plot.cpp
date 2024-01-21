@@ -262,7 +262,7 @@ void SavePlotAsJPEG(string imgName, bool isGCell, string imgPosition ){
 //        GCellPinCoordiUpdate();    
 //    }
     
-    float origWidth = gmax.x - gmin.x, 
+    float origWidth = gmax.x - gmin.x, // !chip width and chip height
           origHeight = gmax.y - gmin.y;
   
     // Minimum length; (either width or height)
@@ -270,7 +270,7 @@ void SavePlotAsJPEG(string imgName, bool isGCell, string imgPosition ){
      
     // imageWidth & height setting
     // Set minimum length of picture as minLength
-    if( imageHeight == 0 || imageWidth == 0 ) {
+    if( imageHeight == 0 || imageWidth == 0 ) {//!
         if( origWidth < origHeight ) {
             imageHeight = 1.0 * origHeight / (origWidth/minLength); 
             imageWidth = minLength;
@@ -355,10 +355,10 @@ void SavePlotAsJPEG(string imgName, bool isGCell, string imgPosition ){
     else {
         for(int i=0; i<gcell_cnt; i++) {
             CELLx* curGCell = &gcell_st[i];
-            if( curGCell -> flg != StdCell ) {
+            if( curGCell -> flg == FillerCell ) {
                 continue;
             }
-            
+
             curGCell->pmin.x = curGCell->center.x - 0.5*curGCell->size.x;
             curGCell->pmax.x = curGCell->center.x + 0.5*curGCell->size.x;
 
@@ -378,8 +378,8 @@ void SavePlotAsJPEG(string imgName, bool isGCell, string imgPosition ){
     string saveName = imgPosition + string(".jpg");
 
     img.draw_text(50, 50, imgName.c_str(), black, NULL, 1, 30); 
-    img.save_jpeg( saveName.c_str(), 70 );
-//  img.save_bmp( string(imgPosition + string(".bmp")).c_str() );
+    //img.save_jpeg( saveName.c_str(), 70 );
+    img.save_bmp( string(imgPosition + string(".bmp")).c_str() );
     cout << "INFO:  JPEG HAS BEEN SAVED: " << saveName << endl;
 }
 

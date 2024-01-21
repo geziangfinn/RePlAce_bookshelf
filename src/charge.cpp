@@ -448,7 +448,7 @@ void potn_grad_2D(int cell_idx, struct FPOS *grad) {
             prec area_share = (max_x - min_x) * (max_y - min_y)
                          //* cell->size.z
                          * cell->den_scal;
-            grad->x += area_share * bpy->e.x;
+            grad->x += area_share * bpy->e.x;//! e*q=potential grad, see paper, equation 16
             grad->y += area_share * bpy->e.y;
         }
     }

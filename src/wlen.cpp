@@ -138,7 +138,7 @@ FPOS get_wlen_cof2(prec ovf) {
         cof.z = 10.0;
     }
     else {
-        tmp = 1.0 / pow(10.0, (ovf - 0.1) * 20 / 9.0 - 1.0);
+        tmp = 1.0 / pow(10.0, (ovf - 0.1) * 20 / 9.0 - 1.0);//! see eplace paper equation 38
         cof.x = cof.y = cof.z = tmp;
     }
     return cof;
@@ -147,7 +147,7 @@ FPOS get_wlen_cof2(prec ovf) {
 void wlen_init(void) {
     int i = 0 /* ,cnt=exp_st_cnt */;
     /* prec interval = exp_interval ; */
-    exp_st = (EXP_ST *)mkl_malloc(sizeof(EXP_ST) * exp_st_cnt, 64);
+    exp_st = (EXP_ST *)mkl_malloc(sizeof(EXP_ST) * exp_st_cnt, 64);// whats exp?
     for(i = 0; i < exp_st_cnt; i++) {
         exp_st[i].x = (prec)i * exp_interval - MAX_EXP;
         exp_st[i].val = exp(exp_st[i].x);
@@ -159,7 +159,7 @@ void wlen_init(void) {
 
     if(GP_DIM_ONE) {
         gp_wlen_weight.x = 1.0;
-        gp_wlen_weight.y = place_backup.cnt.y / place_backup.cnt.x;
+        gp_wlen_weight.y = place_backup.cnt.y / place_backup.cnt.x;//! place_backup=place place.cnt.x = chip length
         // gp_wlen_weight.y = place.cnt.y / place.cnt.x;
         if(flg_3dic)
             gp_wlen_weight.z = TSV_WEIGHT;
@@ -192,8 +192,8 @@ void wlen_init_mGP2D(void) {
     dp_wlen_weight.z = 0.0;
 }
 
-void wlen_init_cGP2D(void) {
-    gp_wlen_weight.x = 1.0;
+void wlen_init_cGP2D(void) {//!
+    gp_wlen_weight.x = 1.0;//! wlen weight?
     gp_wlen_weight.y = 1.0;
     gp_wlen_weight.z = 0.0;
 
@@ -202,17 +202,22 @@ void wlen_init_cGP2D(void) {
     dp_wlen_weight.z = 0.0;
 }
 
-void wcof_init(FPOS bstp) {
-    if(GP_DIM_ONE)
-        wcof00 = wcof00_dim1;
+void wcof_init(FPOS bstp) {//! wcof is actually 1/gamma
+    if(GP_DIM_ONE)// GP_DIM_ONE = false here!
+        wcof00 = wcof00_dim1;//see main for wcof00_dim1, but what is this?
     else
-        wcof00 = wcof00_org;
-
-    base_wcof.x = wcof00.x / (0.5 * (bstp.x + bstp.y));
+        wcof00 = wcof00_org;// some tuning for this in main.cpp, beware
+    base_wcof.x = wcof00.x / (0.5 * (bstp.x + bstp.y));//! bstp.x==bstp.y?
     base_wcof.y = wcof00.y / (0.5 * (bstp.x + bstp.y));
-    base_wcof.z = wcof00.z / (0.5 * (bstp.x + bstp.y));
+    base_wcof.z = wcof00.z / (0.5 * (bstp.x + bstp.y));//! bstp=width(height)/bin_dim, which is wb in the paper(grid size!)
+    cout<<padding<<endl;
+    cout<<"base wcof: ";
+    base_wcof.Dump();
+    cout<<"bstp: ";
+    bstp.Dump();
+    cout<<padding<<endl;
 
-    wlen_cof = fp_scal(0.1, base_wcof);
+    wlen_cof = fp_scal(0.1, base_wcof);// wlen_cof real value? see ns.cpp line 341?
     wlen_cof_inv = fp_inv(wlen_cof);
 }
 
@@ -449,7 +454,7 @@ prec UpdateNetAndGetHpwl() {
         // calculate HPWL
         total_hpwl.x += curNet->max_x - curNet->min_x;
         total_hpwl.y += curNet->max_y - curNet->min_y;
-        total_hpwl.z += curNet->max_z - curNet->min_z;
+        total_hpwl.z += curNet->max_z - curNet->min_z;//? 
     }
 
     return total_hpwl.x + total_hpwl.y + total_hpwl.z;
@@ -485,7 +490,7 @@ void wlen_grad(int cell_idx, FPOS *grad) {
             wlen_grad_wa(cell_idx, grad);
             break;
     }
-    grad->x *= -1.0 * gp_wlen_weight.x;
+    grad->x *= -1.0 * gp_wlen_weight.x;//? why -1?
     grad->y *= -1.0 * gp_wlen_weight.y;
 }
 
@@ -580,7 +585,7 @@ void wlen_grad_wa(int cell_idx, FPOS *grad) {
             continue;
 
         get_net_wlen_grad_wa(pin->fp, net, pin, &net_grad);
-        grad->x += net_grad.x;
+        grad->x += net_grad.x;// grad: sum of grad on all pins
         grad->y += net_grad.y;
     }
 }
@@ -689,7 +694,7 @@ void get_net_wlen_grad_wa(FPOS obj, NET *net, PIN *pin, FPOS *grad) {
     FPOS sum_denom1 = net->sum_denom1;
     FPOS sum_denom2 = net->sum_denom2;
 
-    if(flg1.x) {
+    if(flg1.x) {// if flg=0, assume grad=0
         grad_sum_denom1.x = wlen_cof.x * e1.x;
         grad_sum_num1.x = e1.x + obj.x * grad_sum_denom1.x;
         grad1.x =
@@ -729,8 +734,8 @@ void net_update_init(void) {
     for(int i = 0; i < netCNT; i++) {
         NET *net = &netInstance[i];
 
-        net->terminalMin.Set(place.end);
-        net->terminalMax.Set(place.org);
+        net->terminalMin.Set(place.end);//! terminal means that pin would not move(because its a pin on a terminal) 
+        net->terminalMax.Set(place.org);//! place updated in post_read_3d() 
 
         bool first_term = true;
 
@@ -1037,10 +1042,10 @@ void net_update_wa(FPOS *st) {
     for(i = 0; i < gcell_cnt; i++) {
         CELL* cell = &gcell_st[i];
         cell->center = st[i];
-        cell->den_pmin.x = cell->center.x - cell->half_den_size.x;
+        cell->den_pmin.x = cell->center.x - cell->half_den_size.x;//? half_den_size actually equals half cell size?
         cell->den_pmin.y = cell->center.y - cell->half_den_size.y;
         cell->den_pmax.x = cell->center.x + cell->half_den_size.x;
-        cell->den_pmax.y = cell->center.y + cell->half_den_size.y;
+        cell->den_pmax.y = cell->center.y + cell->half_den_size.y;// den_pmax/min will be used to calculate density
     }
 }
     if(timeon) {time_end(&time); cout << "parallelTime : " << time << endl; };
@@ -1078,7 +1083,7 @@ void net_update_wa(FPOS *st) {
 
             if(!pin->term) {
                 MODULE* curModule = &moduleInstance[pin->moduleID];
-                FPOS pof = curModule->pof[pin->pinIDinModule];
+                FPOS pof = curModule->pof[pin->pinIDinModule];//! pof: pin offset
                 FPOS center = st[pin->moduleID];
                 FPOS fp;
                 fp.x = center.x + pof.x;
@@ -1110,11 +1115,13 @@ void net_update_wa(FPOS *st) {
         for(int j = 0; j < net->pinCNTinObject; j++) {
             PIN* pin = net->pin[j];
             FPOS fp = pin->fp;
-            prec exp_max_x = (fp.x - max_x) * wlen_cof.x;
-            prec exp_min_x = (min_x - fp.x) * wlen_cof.x;
+            //cout<<padding<<"wlen_cof in ns: "<<wlen_cof.x<<wlen_cof.y<<endl;
+            
+            prec exp_max_x = (fp.x - max_x) * wlen_cof.x;//! wlen_cof is actually 1/gamma 
+            prec exp_min_x = (min_x - fp.x) * wlen_cof.x;//! wlen_cof used here!
             prec exp_max_y = (fp.y - max_y) * wlen_cof.y;
             prec exp_min_y = (min_y - fp.y) * wlen_cof.y;
-
+            //cout<<padding<<"expmax: "<<exp_max_x<<endl;
             if(exp_max_x > NEG_MAX_EXP) {
                 pin->e1.x = get_exp(exp_max_x);
                 sum_num1.x += fp.x * pin->e1.x;
@@ -1146,7 +1153,7 @@ void net_update_wa(FPOS *st) {
             }
 
             if(exp_min_y > NEG_MAX_EXP) {
-                pin->e2.y = get_exp(exp_min_y);
+                pin->e2.y = get_exp(exp_min_y);//? what is e1 and e2?
                 sum_num2.y += fp.y * pin->e2.y;
                 sum_denom2.y += pin->e2.y;
                 pin->flg2.y = 1;
