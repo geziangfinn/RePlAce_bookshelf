@@ -60,7 +60,7 @@ inline void potn_pre(int cell_idx, struct FPOS *charge_dpre) {
             *charge_dpre = zeroFPoint;
             break;
         case AreaDpre:
-            charge_dpre->x = charge_dpre->y = (prec)(cell->area);
+            charge_dpre->x = charge_dpre->y = (prec)(cell->area);// see ePlace paper equation(33)
             break;
     }
 }

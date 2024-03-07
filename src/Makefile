@@ -1,7 +1,7 @@
 CC		=   gcc
 CPPC	=   g++
 LD      =   ld
-OPTFLAG = 	-m64 -O3 -fPIC -DNDEBUG -ffast-math -Dcimg_display=1 
+OPTFLAG = 	-w -m64 -O3 -fPIC -DNDEBUG -fopenmp -ffast-math -Dcimg_display=1 
 WFLAG 	= 	-W -Wall -Wextra -Wunreachable-code 
 WSTRICT =	-Werror -Wundef -Wpointer-arith 
 

@@ -105,6 +105,7 @@ void setup_before_opt(void) {
 }
 
 int setup_before_opt_mGP2D(void) {
+    cout << LOGCYAN<<"setup before opt mGP2D\n"<<LOGRESET<<endl;
     tier_init_2D(mGP2D);
     bin_init_2D(mGP2D);
 
@@ -121,15 +122,32 @@ int setup_before_opt_mGP2D(void) {
 }
 
 int setup_before_opt_cGP2D(void) {
+    cout << LOGCYAN<<"setup before opt cGP2D\n"<<LOGRESET<<endl;
+           cout << LOGRED << "global variable wcof00_org in setup_before_opt_cGP2D(void)1: ";
+    wcof00_org.Dump("");
+    cout << LOGRESET << endl;
     tier_init_2D(cGP2D);
+
+    cout << LOGRED << "global variable wcof00_org in setup_before_opt_cGP2D(void)1.25: ";
+    wcof00_org.Dump("");
+    cout << LOGRESET << endl;
     bin_init_2D(cGP2D);//!
     // routability
+        cout << LOGRED << "global variable wcof00_org in setup_before_opt_cGP2D(void)1.4: ";
+    wcof00_org.Dump("");
+    cout << LOGRESET << endl;
     if(routabilityCMD == true)
     {   
-        cout<<"routabilityCMD=true"<<endl;
+        cout<<"DEBUG:    routabilityCMD=true"<<endl;
         tile_init_cGP2D();
     }
-
+    else
+    {
+        cout<<"DEBUG:    routabilityCMD=FALSE"<<endl;
+    }
+           cout << LOGRED << "global variable wcof00_org in setup_before_opt_cGP2D(void) 1.5: ";
+    wcof00_org.Dump("");
+    cout << LOGRESET << endl;
     // if (isRoutabilityInit == false)     routability_init();
 
     if(dim_bin_cGP2D.x <= dim_bin.x && dim_bin_cGP2D.y <= dim_bin.y) {//! dim_din=32*32*32, its a default bin size
@@ -138,7 +156,9 @@ int setup_before_opt_cGP2D(void) {
         exit(0);
         return 0;
     }
-
+       cout << LOGRED << "global variable wcof00_org in setup_before_opt_cGP2D(void)2: ";
+    wcof00_org.Dump("");
+    cout << LOGRESET << endl;
     charge_fft_init(dim_bin_cGP2D, bin_stp_cGP2D, 0);
     wcof_init(bin_stp_cGP2D);
     wlen_init_cGP2D();

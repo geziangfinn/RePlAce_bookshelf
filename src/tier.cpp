@@ -91,9 +91,9 @@ void tier_init_2D(int STAGE) {//!
         tier->filler_area =
             (tier->area - tier->virt_area - tier->term_area) * target_cell_den -//! tier->ws_area = tier->area - tier->term_area - tier->virt_area
             tier->modu_area;
-        cout<<padding<<endl;
-        cout<<"virt "<<tier->virt_area<<endl;
-        cout<<padding<<endl;
+
+        cout<<"tier virtual area in tier_init_2D(int STAGE)"<<tier->virt_area<<endl;
+
         tier->filler_cnt = (int)(tier->filler_area / filler_area + 0.5);
         //?! is filler_cnt calculated here different from filler_cnt calculated in filler_init()?
         max_idx = min_idx + tier->filler_cnt > gcell_cnt
@@ -268,7 +268,7 @@ void tier_assign(int mode) {  // 1: MIXED  0: CellOnly
 //        tier->modu_den = tier->modu_area / tier->ws_area;
         prec moduleDensity = tier->modu_area / tier->ws_area;
 
-        printf("INFO:  Tier %d, Density is %.6lf\n", i, moduleDensity);
+        printf("INFO: tier.cpp line 271  Tier %d, Density is %.6lf\n", i, moduleDensity);
     }
     mkl_free(t0_st);
     free(modu_st);

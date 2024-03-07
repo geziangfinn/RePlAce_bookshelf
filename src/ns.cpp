@@ -963,7 +963,7 @@ void getCostFuncGradient2(struct FPOS *dst, struct FPOS *wdst,
         //            //}
         //#else
         // else {
-        pre.x = wpre.x + opt_phi_cof * charge_dpre.x;
+        pre.x = wpre.x + opt_phi_cof * charge_dpre.x;// opt_phi_cof is lambda?
         pre.y = wpre.y + opt_phi_cof * charge_dpre.y;
         //}
         //#endif

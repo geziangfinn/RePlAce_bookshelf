@@ -405,7 +405,7 @@ void potn_grad_2D(int cell_idx, struct FPOS *grad) {
     CELLx *cell = &gcell_st[cell_idx];
     TIER *tier = &tier_st[cell->tier];
 
-    b0.x = INT_CONVERT((cell->den_pmin.x - tier->bin_org.x) * tier->inv_bin_stp.x);
+    b0.x = INT_CONVERT((cell->den_pmin.x - tier->bin_org.x) * tier->inv_bin_stp.x);//! den_pmin is used, which means local smooth
     b0.y = INT_CONVERT((cell->den_pmin.y - tier->bin_org.y) * tier->inv_bin_stp.y);
     b1.x = INT_CONVERT((cell->den_pmax.x - tier->bin_org.x) * tier->inv_bin_stp.x);
     b1.y = INT_CONVERT((cell->den_pmax.y - tier->bin_org.y) * tier->inv_bin_stp.y);

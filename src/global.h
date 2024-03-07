@@ -52,6 +52,7 @@
 #include <iomanip>
 #include <google/dense_hash_map>
 #include <cfloat>
+#include <omp.h>
 
 #define PI 3.141592653589793238462L
 #define SQRT2 1.414213562373095048801L
@@ -126,6 +127,24 @@ typedef double prec;
 #define LAYER_ASSIGN_3DIC MIN_TIER_ORDER                  /* MAX_AREA_DIS_DIV */
 
 ///////////////////////////////////////////////////////////////////////////
+
+#define LOGRESET "\033[0m"
+#define LOGBLACK "\033[30m"              /* Black */
+#define LOGRED "\033[31m"                /* Red */
+#define LOGGREEN "\033[32m"              /* Green */
+#define LOGYELLOW "\033[33m"             /* Yellow */
+#define LOGBLUE "\033[34m"               /* Blue */
+#define LOGMAGENTA "\033[35m"            /* Magenta */
+#define LOGCYAN "\033[36m"               /* Cyan */
+#define LOGWHITE "\033[37m"              /* White */
+#define LOGBOLDBLACK "\033[1m\033[30m"   /* Bold Black */
+#define LOGBOLDRED "\033[1m\033[31m"     /* Bold Red */
+#define LOGBOLDGREEN "\033[1m\033[32m"   /* Bold Green */
+#define LOGBOLDYELLOW "\033[1m\033[33m"  /* Bold Yellow */
+#define LOGBOLDBLUE "\033[1m\033[34m"    /* Bold Blue */
+#define LOGBOLDMAGENTA "\033[1m\033[35m" /* Bold Magenta */
+#define LOGBOLDCYAN "\033[1m\033[36m"    /* Bold Cyan */
+#define LOGBOLDWHITE "\033[1m\033[37m"   /* Bold White */
 
 using std::string;
 using std::cout;
@@ -650,7 +669,7 @@ struct PLACE {
     void Dump(string a) {
         cout << a << endl;
         org.Dump("origin");
-        cout << fixed <<setprecision(0)<<"area: " << area << endl;
+        cout <<"area: " << area << endl;
         center.Dump("center");
         stp.Dump("stp");
         cnt.Dump("cnt");

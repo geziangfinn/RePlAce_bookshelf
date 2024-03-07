@@ -608,24 +608,24 @@ void CreateSparseMatrix(
                         tripletListX.push_back(
                             T(moduleID2, moduleID1, common2));
                         //????
-                        // xcg_b(moduleID1) += common2 * ((fp1.x - center1.x) -
-                        //                                (fp2.x - center2.x));
-                        // xcg_b(moduleID2) += common2 * ((fp2.x - center2.x) -
-                        //                                (fp1.x - center1.x));
+                        xcg_b(moduleID1) += common2 * ((fp1.x - center1.x) -
+                                                       (fp2.x - center2.x));
+                        xcg_b(moduleID2) += common2 * ((fp2.x - center2.x) -
+                                                       (fp1.x - center1.x));
                     }
                     // 1 is terminal, 2 is module
                     else if(is_term1 && !is_term2) {
                         tripletListX.push_back(T(moduleID2, moduleID2, wt_x));
                         xcg_b(moduleID2) +=
-                            //wt_x * (fp1.x - (fp2.x - center2.x));
-                            wt_x*center1.x;
+                            wt_x * (fp1.x - (fp2.x - center2.x));
+                            // wt_x*center1.x;
                     }
                     // 2 is terminal, 1 is module
                     else if(!is_term1 && is_term2) {
                         tripletListX.push_back(T(moduleID1, moduleID1, wt_x));
                         xcg_b(moduleID1) +=
-                            //wt_x * (fp2.x - (fp1.x - center1.x));
-                            wt_x*center2.x;
+                            wt_x * (fp2.x - (fp1.x - center1.x));
+                            // wt_x*center2.x;
                     }
                 }
 
@@ -650,24 +650,24 @@ void CreateSparseMatrix(
                         tripletListY.push_back(
                             T(moduleID2, moduleID1, common2));
 
-                        // ycg_b(moduleID1) += common2 * ((fp1.y - center1.y) - // fp is pin absolute coor
-                        //                                (fp2.y - center2.y));
-                        // ycg_b(moduleID2) += common2 * ((fp2.y - center2.y) -
-                        //                                (fp1.y - center1.y));
+                        ycg_b(moduleID1) += common2 * ((fp1.y - center1.y) - // fp is pin absolute coor
+                                                       (fp2.y - center2.y));
+                        ycg_b(moduleID2) += common2 * ((fp2.y - center2.y) -
+                                                       (fp1.y - center1.y));
                     }
                     // 1 is terminal, 2 is module
                     else if(is_term1 && !is_term2) {
                         tripletListY.push_back(T(moduleID2, moduleID2, wt_y));
                         ycg_b(moduleID2) +=
-                            //wt_y * (fp1.y - (fp2.y - center2.y));
-                            wt_y * center1.y;
+                            wt_y * (fp1.y - (fp2.y - center2.y));
+                            // wt_y * center1.y;
                     }
                     // 2 is terminal, 1 is module
                     else if(!is_term1 && is_term2) {
                         tripletListY.push_back(T(moduleID1, moduleID1, wt_y));
                         ycg_b(moduleID1) +=
-                            //wt_y * (fp2.y - (fp1.y - center1.y));
-                            wt_y * center2.y;
+                            wt_y * (fp2.y - (fp1.y - center1.y));
+                            // wt_y * center2.y;
                     }
                 }
             }
